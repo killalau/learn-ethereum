@@ -4,9 +4,15 @@ App = {
   account: 0x0,
 
   init: function () {
-    /*
-     * Replace me...
-     */
+    var $sellForm = $('#sell-article-form');
+    var $sellBtn = $('#sell-btn').click(function () {
+      $sellForm.toggle();
+    });
+
+    $sellForm.submit(function (event) {
+      event.preventDefault();
+      App.sellArticle();
+    });
 
     return App.initWeb3();
   },
@@ -65,6 +71,7 @@ App = {
       .then(function (article) {
         if (article[0] == 0x0) {
           // no article
+          $artList.text('No article yet.');
           return;
         }
 
@@ -75,6 +82,9 @@ App = {
         var price = article[3];
 
         $artList.append(App.createArticleElement(seller, name, desc, price));
+      })
+      .catch(function (err) {
+        console.error(err);
       });
   },
 
@@ -93,9 +103,34 @@ App = {
     $item.find('.article__seller').text('Sold by: ' + (isCurrentAccount ? 'You' : seller));
     $item.find('.article__name').text(name);
     $item.find('.article__desc').text(desc);
-    $item.find('.article__price').text('Price: ' + web3.fromWei(price) + ' ETH');
+    $item.find('.article__price').text('Price (ETH): ' + web3.fromWei(price));
     return $item;
   },
+
+  sellArticle: function () {
+    var $form = $('#sell-article-form');
+    var name = $form.find('[name=name]').val().trim();
+    var desc = $form.find('[name=desc]').val();
+    var price = $form.find('[name=price]').val();
+    price = web3.toWei(parseFloat(price || 0));
+
+    if (name === '' || price <= 0) {
+      // nothing to sell
+      return false;
+    }
+
+    App.contracts.ChainList.deployed()
+      .then(function (instance) {
+        return instance.sellArticle(name, desc, price, { from: App.account, gas: 500000 });
+      })
+      .then(function (result) {
+        $form.hide();
+        return App.reloadArticles();
+      })
+      .catch(function (err) {
+        console.error(err);
+      });
+  }
 };
 
 $(function () {
