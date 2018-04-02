@@ -123,12 +123,15 @@ App = {
 
     App.contracts.ChainList.deployed()
       .then(function (instance) {
+        $form.find('input, textarea, button').prop('disabled', true);
         return instance.sellArticle(name, desc, price, { from: App.account, gas: 500000 });
       })
       .then(function (result) {
+        $form.find('input, textarea, button').prop('disabled', false);
         $form.hide();
       })
       .catch(function (err) {
+        $form.find('input, textarea, button').prop('disabled', false);
         console.error(err);
       });
   },
