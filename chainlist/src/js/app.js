@@ -39,6 +39,8 @@ App = {
       App.contracts.ChainList = TruffleContract(artifact);
       // set the provider for our contracts
       App.contracts.ChainList.setProvider(App.web3Provider);
+      // listen to events
+      App.listenToEvents();
       // retrieve the article from the contract
       return App.reloadArticles();
     });
@@ -125,12 +127,40 @@ App = {
       })
       .then(function (result) {
         $form.hide();
-        return App.reloadArticles();
       })
       .catch(function (err) {
         console.error(err);
       });
-  }
+  },
+
+  // listen to events emitted by the contract
+  listenToEvents: function () {
+    App.contracts.ChainList.deployed()
+      .then(function (instance) {
+        instance.LogSellArticle({}, {})
+          .watch(function (err, event) {
+            if (err) {
+              console.error(err);
+              return;
+            }
+
+            /*
+            event fields:
+            - address          (contract address)
+            - args             (event args)
+            - blockHash
+            - blockNumber
+            - event            (event type)
+            - logIndex         (event log index)
+            - transactionHash
+            - transactionIndex
+            - type             (mined or ??)
+            */
+            console.log('new article for sell:', event);
+            App.reloadArticles();
+          });
+      });
+  },
 };
 
 $(function () {
