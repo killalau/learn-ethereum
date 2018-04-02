@@ -7,6 +7,11 @@ contract ChainList {
     string desc;
     uint256 price;
 
+    // constructor
+    function ChainList() public {
+        sellArticle("default", "set by default", 2000000000000000000);
+    }
+
     function sellArticle(string _name, string _desc, uint256 _price) public {
         seller = msg.sender;
         name = _name;
@@ -15,9 +20,9 @@ contract ChainList {
     }
 
     function getArticle() public view returns (
-        address _seller, 
-        string _name, 
-        string _desc, 
+        address _seller,
+        string _name,
+        string _desc,
         uint256 _price
     ) {
         return (seller, name, desc, price);
