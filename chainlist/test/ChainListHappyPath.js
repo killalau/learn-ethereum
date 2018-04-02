@@ -27,4 +27,15 @@ contract('ChainList', (accounts) => {
         assert.equal(data[2], desc, 'article description must be ' + desc);
         assert.equal(data[3].toNumber(), web3.toWei(price), 'article price must be ' + web3.toWei(price));
     });
+
+    it('should emit an event when a new article is sold', async () => {
+        const instance = await ChainList.deployed();
+        const receipt = await instance.sellArticle(name, desc, web3.toWei(price), { from: seller });
+
+        assert.equal(receipt.logs.length, 1, 'one event should have been triggered');
+        assert.equal(receipt.logs[0].event, 'LogSellArticle', 'event should be LogSellArticle');
+        assert.equal(receipt.logs[0].args._seller, seller, 'event seller must be ' + seller);
+        assert.equal(receipt.logs[0].args._name, name, 'event name must be ' + name);
+        assert.equal(receipt.logs[0].args._price.toNumber(), web3.toWei(price), 'event name must be ' + web3.toWei(price));
+    });
 });
