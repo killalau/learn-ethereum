@@ -19,3 +19,23 @@ sudo apt-get install ethereum
 # install truffle
 npm install -g truffle
 ```
+
+## Setup private node
+```bash
+cd private
+
+# create genius block
+puppeth
+
+# init ethereum node
+geth --datadir ./ init LearnEthereum.json
+
+# create account
+geth --datadir ./ account new
+
+# start node
+./startnode-osx.sh
+
+# attach to node
+geth attach
+```
