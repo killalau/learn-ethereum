@@ -9,10 +9,9 @@ App = {
       $sellForm.toggle();
     });
 
-    $sellForm.submit(function (event) {
-      event.preventDefault();
-      App.sellArticle();
-    });
+    $sellForm.submit(App.sellArticle);
+
+    $('body').on('click', '.article__buy-btn', App.buyArticle);
 
     return App.initWeb3();
   },
@@ -79,37 +78,48 @@ App = {
 
         // display info to UI
         var seller = article[0];
-        var name = article[1];
-        var desc = article[2];
-        var price = article[3];
+        var buyer = article[1];
+        var name = article[2];
+        var desc = article[3];
+        var price = article[4];
 
-        $artList.append(App.createArticleElement(seller, name, desc, price));
+        $artList.append(App.createArticleElement(seller, buyer, name, desc, price));
       })
       .catch(function (err) {
         console.error(err);
       });
   },
 
-  createArticleElement: function (seller, name, desc, price) {
+  createArticleElement: function (seller, buyer, name, desc, price) {
     var $item = $(`
     <div class="article-list__item article">
       <div class="article__name"></div>
       <div class="article__desc"></div>
       <div class="article__price"></div>
       <div class="article__seller"></div>
+      <div class="article__buyer"></div>
       <button class="article__buy-btn btn btn-primary">Buy</button>
     </div>
     `);
-    var isCurrentAccount = seller == App.account;
-    $item.data({ seller, name, desc, price, isCurrentAccount });
-    $item.find('.article__seller').text('Sold by: ' + (isCurrentAccount ? 'You' : seller));
+    var sellByYou = seller == App.account;
+    var buyByYou = buyer == App.account;
+    $item.find('.article__seller').text('Sold by: ' + (sellByYou ? 'You' : seller));
+    $item.find('.article__buyer').text('Sold to: ' + (buyByYou ? 'You' : buyer));
     $item.find('.article__name').text(name);
     $item.find('.article__desc').text(desc);
     $item.find('.article__price').text('Price (ETH): ' + web3.fromWei(price));
+    $item.find('.article__buy-btn').data({ seller, name, desc, price, sellByYou, buyByYou });
+    if (buyer != 0x0) {
+      $item.addClass('article-list__item--sold');
+    }
+    if (seller == App.account) {
+      $item.addClass('article-list__item--own');
+    }
     return $item;
   },
 
-  sellArticle: function () {
+  sellArticle: function (event) {
+    event.preventDefault();
     var $form = $('#sell-article-form');
     var name = $form.find('[name=name]').val().trim();
     var desc = $form.find('[name=desc]').val();
@@ -138,6 +148,18 @@ App = {
 
   // listen to events emitted by the contract
   listenToEvents: function () {
+    /*
+    event fields:
+    - address          (contract address)
+    - args             (event args)
+    - blockHash
+    - blockNumber
+    - event            (event type)
+    - logIndex         (event log index)
+    - transactionHash
+    - transactionIndex
+    - type             (mined or ??)
+    */
     App.contracts.ChainList.deployed()
       .then(function (instance) {
         instance.LogSellArticle({}, {})
@@ -147,21 +169,36 @@ App = {
               return;
             }
 
-            /*
-            event fields:
-            - address          (contract address)
-            - args             (event args)
-            - blockHash
-            - blockNumber
-            - event            (event type)
-            - logIndex         (event log index)
-            - transactionHash
-            - transactionIndex
-            - type             (mined or ??)
-            */
             console.log('new article for sell:', event);
             App.reloadArticles();
           });
+
+        instance.LogBuyArticle({}, {})
+          .watch(function (err, event) {
+            if (err) {
+              console.error(err);
+              return;
+            }
+
+            console.log('new article for bought:', event);
+            App.reloadArticles();
+          });
+      });
+  },
+
+  buyArticle: function (event) {
+    event.preventDefault();
+    var $el = $(this);
+    var data = $el.data();
+
+    console.log(data);
+
+    App.contracts.ChainList.deployed()
+      .then(function (instance) {
+        return instance.buyArticle({ from: App.account, value: data.price, gas: 500000 });
+      })
+      .catch(function (err) {
+        console.log(err);
       });
   },
 };

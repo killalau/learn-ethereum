@@ -64,6 +64,5 @@ contract('ChainList', (accounts) => {
         assert.equal(receipt.logs[0].args._price.toNumber(), web3.toWei(price), 'event name must be ' + web3.toWei(price));
         assert.equal(newSellerBalance, origSellerBalance + price, 'Seller balance should update correctly');
         assert(newBuyerBalance <= origBuyerBalance - price, 'Buyer balance should update correctly');
-
     });
 });

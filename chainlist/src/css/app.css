@@ -14,6 +14,16 @@
     color: #666666;
     font-style: italic;
 }
+.article-list__item .article__buyer {
+    display: none;
+}
+.article-list__item--sold .article__buyer {
+    display: block;
+}
+.article-list__item--sold .article__buy-btn,
+.article-list__item--own .article__buy-btn {
+    display: none;
+}
 
 #sell-article-form {
     background: #eeeeee;
@@ -21,3 +31,4 @@
     border-radius: 5px;
     margin: 10px 0;
 }
+
