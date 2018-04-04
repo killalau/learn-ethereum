@@ -4,65 +4,101 @@ var ChainList = artifacts.require('./ChainList.sol');
 contract('ChainList', (accounts) => {
     const seller = accounts[1];
     const buyer = accounts[2];
-    const name = 'article 1';
-    const desc = 'Description for article 1';
-    const price = 2;
+    const name1 = 'article 1';
+    const desc1 = 'Description for article 1';
+    const price1 = 1;
+    const name2 = 'article 2';
+    const desc2 = 'Description for article 2';
+    const price2 = 2;
 
     it('should be initialized with empty values', async () => {
         const instance = await ChainList.deployed();
-        const data = await instance.getArticle();
+        const size = await instance.getNumberOfArticles();
+        const articles = await instance.getArticlesForSale();
 
-        assert.equal(data[0], 0x0, 'seller must be empty');
-        assert.equal(data[1], 0x0, 'buyer must be empty');
-        assert.equal(data[2], '', 'article name must be empty');
-        assert.equal(data[3], '', 'article description must be empty');
-        assert.equal(data[4].toNumber(), 0, 'article price must be zero');
+        expect(size.toNumber(), 'number of articles').to.equal(0);
+        expect(articles, 'articles for sale').to.have.length(0);
     });
 
-    it('should sell an article', async () => {
+    it('should sell the first article', async () => {
         const instance = await ChainList.deployed();
-        await instance.sellArticle(name, desc, web3.toWei(price), { from: seller });
-        const data = await instance.getArticle();
+        const receipt = await instance.sellArticle(name1, desc1, web3.toWei(price1), { from: seller });
+        expect(receipt.logs, 'logs').to.have.length(1);
+        expect(receipt.logs[0], 'log').to.have.property('event').that.equal('LogSellArticle');
+        expect(receipt.logs[0].args._id.toNumber(), 'log.args._id').to.equal(1);
+        expect(receipt.logs[0].args._seller, 'log.args._seller').to.equal(seller);
+        expect(receipt.logs[0].args._name, 'log.args._name').to.equal(name1);
+        expect(receipt.logs[0].args._price.toString(), 'log.args._price').to.equal(web3.toWei(price1));
 
-        assert.equal(data[0], seller, 'seller must be ' + seller);
-        assert.equal(data[1], 0x0, 'buyer must be empty');
-        assert.equal(data[2], name, 'article name must be ' + name);
-        assert.equal(data[3], desc, 'article description must be ' + desc);
-        assert.equal(data[4].toNumber(), web3.toWei(price), 'article price must be ' + web3.toWei(price));
+        const size = await instance.getNumberOfArticles();
+        const articleIds = await instance.getArticlesForSale();
+        expect(size.toNumber(), 'number of articles').to.equal(1);
+        expect(articleIds, 'articles for sale').to.have.length(1);
+        expect(articleIds[0].toNumber(), 'article id').to.equal(1);
+
+        const article = await instance.articles(1);
+        expect(article[0].toNumber(), 'article id').to.equal(1);
+        expect(article[1], 'seller').to.equal(seller);
+        expect(parseInt(article[2]), 'buyer').to.equal(0x0);
+        expect(article[3], 'name').to.equal(name1);
+        expect(article[4], 'desc').to.equal(desc1);
+        expect(article[5].toString(), 'price').to.equal(web3.toWei(price1));
     });
 
-    it('should emit an event when a new article is sold', async () => {
+    it('should sell the second article', async () => {
         const instance = await ChainList.deployed();
-        const receipt = await instance.sellArticle(name, desc, web3.toWei(price), { from: seller });
+        const receipt = await instance.sellArticle(name2, desc2, web3.toWei(price2), { from: seller });
+        expect(receipt.logs, 'logs').to.have.length(1);
+        expect(receipt.logs[0], 'log').to.have.property('event').that.equal('LogSellArticle');
+        expect(receipt.logs[0].args._id.toNumber(), 'log.args._id').to.equal(2);
+        expect(receipt.logs[0].args._seller, 'log.args._seller').to.equal(seller);
+        expect(receipt.logs[0].args._name, 'log.args._name').to.equal(name2);
+        expect(receipt.logs[0].args._price.toString(), 'log.args._price').to.equal(web3.toWei(price2));
 
-        assert.equal(receipt.logs.length, 1, 'one event should have been triggered');
-        assert.equal(receipt.logs[0].event, 'LogSellArticle', 'event should be LogSellArticle');
-        assert.equal(receipt.logs[0].args._seller, seller, 'event seller must be ' + seller);
-        assert.equal(receipt.logs[0].args._name, name, 'event name must be ' + name);
-        assert.equal(receipt.logs[0].args._price.toNumber(), web3.toWei(price), 'event name must be ' + web3.toWei(price));
+        const size = await instance.getNumberOfArticles();
+        const articleIds = await instance.getArticlesForSale();
+        expect(size.toNumber(), 'number of articles').to.equal(2);
+        expect(articleIds, 'articles for sale').to.have.length(2);
+        expect(articleIds[1].toNumber(), 'article id').to.equal(2);
+
+        const article = await instance.articles(2);
+        expect(article[0].toNumber(), 'article id').to.equal(2);
+        expect(article[1], 'seller').to.equal(seller);
+        expect(parseInt(article[2]), 'buyer').to.equal(0x0);
+        expect(article[3], 'name').to.equal(name2);
+        expect(article[4], 'desc').to.equal(desc2);
+        expect(article[5].toString(), 'price').to.equal(web3.toWei(price2));
     });
 
     it('should buy an article', async () => {
         const instance = await ChainList.deployed();
         const origBuyerBalance = web3.fromWei(web3.eth.getBalance(buyer)).toNumber();
         const origSellerBalance = web3.fromWei(web3.eth.getBalance(seller)).toNumber();
-        const receipt = await instance.buyArticle({ from: buyer, value: web3.toWei(price) });
-        const data = await instance.getArticle();
+        const receipt = await instance.buyArticle(1, { from: buyer, value: web3.toWei(price1) });
+        expect(receipt.logs, 'logs').to.have.length(1);
+        expect(receipt.logs[0], 'log').to.have.property('event').that.equal('LogBuyArticle');
+        expect(receipt.logs[0].args._id.toNumber(), 'log.args._id').to.equal(1);
+        expect(receipt.logs[0].args._seller, 'log.args._seller').to.equal(seller);
+        expect(receipt.logs[0].args._buyer, 'log.args._buyer').to.equal(buyer);
+        expect(receipt.logs[0].args._name, 'log.args._name').to.equal(name1);
+        expect(receipt.logs[0].args._price.toString(), 'log.args._price').to.equal(web3.toWei(price1));
+
+        const size = await instance.getNumberOfArticles();
+        const articleIds = await instance.getArticlesForSale();
+        expect(size.toNumber(), 'number of articles').to.equal(2);
+        expect(articleIds, 'articles for sale').to.have.length(1);
+
         const newBuyerBalance = web3.fromWei(web3.eth.getBalance(buyer)).toNumber();
         const newSellerBalance = web3.fromWei(web3.eth.getBalance(seller)).toNumber();
+        expect(newSellerBalance, 'seller balance').to.equal(origSellerBalance + price1);
+        expect(newBuyerBalance, 'buyer balance').to.lt(origBuyerBalance - price1);
 
-        assert.equal(data[0], seller, 'seller must be ' + seller);
-        assert.equal(data[1], buyer, 'buyer must be ' + buyer);
-        assert.equal(data[2], name, 'article name must be ' + name);
-        assert.equal(data[3], desc, 'article description must be ' + desc);
-        assert.equal(data[4].toNumber(), web3.toWei(price), 'article price must be ' + web3.toWei(price));
-        assert.equal(receipt.logs.length, 1, 'two event should have been triggered');
-        assert.equal(receipt.logs[0].event, 'LogBuyArticle', 'event should be LogBuyArticle');
-        assert.equal(receipt.logs[0].args._seller, seller, 'event seller must be ' + seller);
-        assert.equal(receipt.logs[0].args._buyer, buyer, 'event buyer must be ' + buyer);
-        assert.equal(receipt.logs[0].args._name, name, 'event name must be ' + name);
-        assert.equal(receipt.logs[0].args._price.toNumber(), web3.toWei(price), 'event name must be ' + web3.toWei(price));
-        assert.equal(newSellerBalance, origSellerBalance + price, 'Seller balance should update correctly');
-        assert(newBuyerBalance <= origBuyerBalance - price, 'Buyer balance should update correctly');
+        const article = await instance.articles(1);
+        expect(article[0].toNumber(), 'article id').to.equal(1);
+        expect(article[1], 'seller').to.equal(seller);
+        expect(article[2], 'buyer').to.equal(buyer);
+        expect(article[3], 'name').to.equal(name1);
+        expect(article[4], 'desc').to.equal(desc1);
+        expect(article[5].toString(), 'price').to.equal(web3.toWei(price1));
     });
 });

@@ -3,7 +3,7 @@ pragma solidity ^0.4.18;
 contract ChainList {
     // custom types
     struct Article {
-        uint id;
+        uint id; // ID start from 1
         address seller;
         address buyer;
         string name;
@@ -32,7 +32,7 @@ contract ChainList {
     );
 
     function sellArticle(string _name, string _desc, uint256 _price) public {
-        articleCounter++;
+        articleCounter++; // ID start from 1
 
         articles[articleCounter] = Article(
             articleCounter,
@@ -53,8 +53,8 @@ contract ChainList {
     function getArticlesForSale() public view returns (uint[]) {
         uint saleCount = 0;
 
-        uint[] memory articleIds = new uint[](articleCounter);
-        for(uint i = 1; i < articleCounter; i++){
+        uint[] memory articleIds = new uint[](articleCounter + 1);
+        for(uint i = 1; i <= articleCounter; i++){ // ID start from 1
             if(articles[i].buyer == 0x0){
                 articleIds[saleCount] = articles[i].id;
                 saleCount++;
@@ -68,16 +68,6 @@ contract ChainList {
 
         return forSale;
     }
-
-    // function getArticle(uint _id) public view returns (
-    //     address _seller,
-    //     address _buyer,
-    //     string _name,
-    //     string _desc,
-    //     uint256 _price
-    // ) {
-    //     return (seller, buyer, name, desc, price);
-    // }
 
     function buyArticle(uint _id) payable public {
         // special keyword: throw, assert, require, revert
