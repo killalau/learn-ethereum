@@ -14,6 +14,13 @@ module.exports = {
             network_id: '4224',
             gas: 4700000,
             // from: '0x3bb62d3041cd973a239e194b1a3f4ec20f09f931',
+        },
+
+        rinkeby: {
+            host: 'localhost',
+            port: 8545,
+            network_id: 4,
+            gas: 4700000,
         }
     },
 };
