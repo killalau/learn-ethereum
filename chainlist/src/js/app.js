@@ -2,6 +2,7 @@ App = {
   web3Provider: null,
   contracts: {},
   account: 0x0,
+  loading: false,
 
   init: function () {
     var $sellForm = $('#sell-article-form');
@@ -60,37 +61,57 @@ App = {
   },
 
   reloadArticles: function () {
+    // advoid re-entry
+    if (App.loading) return;
+
     // refresh account info because the balance might have changed
     App.displayAccountInfo();
 
     var $artList = $('#article-list').empty();
 
+    var cachedInstance;
+    App.loading = true;
     App.contracts.ChainList.deployed()
       .then(function (instance) {
-        return instance.getArticle();
+        cachedInstance = instance;
+        return instance.getArticlesForSale();
       })
-      .then(function (article) {
-        if (article[0] == 0x0) {
+      .then(function (articleIds) {
+        console.log(articleIds);
+        if (!articleIds.length) {
           // no article
           $artList.text('No article yet.');
-          return;
+          return [];
         }
 
-        // display info to UI
-        var seller = article[0];
-        var buyer = article[1];
-        var name = article[2];
-        var desc = article[3];
-        var price = article[4];
+        var promises = articleIds.map(function (id) {
+          return cachedInstance.articles(id);
+        });
+        return Promise.all(promises);
+      })
+      .then(function (articles) {
+        console.log(articles);
+        for (var aid in articles) {
+          // display info to UI
+          var article = articles[aid];
+          var id = article[0];
+          var seller = article[1];
+          var buyer = article[2];
+          var name = article[3];
+          var desc = article[4];
+          var price = article[5];
 
-        $artList.append(App.createArticleElement(seller, buyer, name, desc, price));
+          $artList.append(App.createArticleElement(id, seller, buyer, name, desc, price));
+        }
+        App.loading = false;
       })
       .catch(function (err) {
         console.error(err);
+        App.loading = false;
       });
   },
 
-  createArticleElement: function (seller, buyer, name, desc, price) {
+  createArticleElement: function (id, seller, buyer, name, desc, price) {
     var $item = $(`
     <div class="article-list__item article">
       <div class="article__name"></div>
@@ -108,7 +129,7 @@ App = {
     $item.find('.article__name').text(name);
     $item.find('.article__desc').text(desc);
     $item.find('.article__price').text('Price (ETH): ' + web3.fromWei(price));
-    $item.find('.article__buy-btn').data({ seller, name, desc, price, sellByYou, buyByYou });
+    $item.find('.article__buy-btn').data({ id, seller, name, desc, price, sellByYou, buyByYou });
     if (buyer != 0x0) {
       $item.addClass('article-list__item--sold');
     }
@@ -195,7 +216,7 @@ App = {
 
     App.contracts.ChainList.deployed()
       .then(function (instance) {
-        return instance.buyArticle({ from: App.account, value: data.price, gas: 500000 });
+        return instance.buyArticle(data.id, { from: App.account, value: data.price, gas: 500000 });
       })
       .catch(function (err) {
         console.log(err);
