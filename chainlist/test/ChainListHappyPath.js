@@ -1,4 +1,4 @@
-var ChainList = artifacts.require('./ChainList.sol');
+const ChainList = artifacts.require('./ChainList.sol');
 
 // test suite
 contract('ChainList', (accounts) => {
@@ -15,7 +15,6 @@ contract('ChainList', (accounts) => {
         const instance = await ChainList.deployed();
         const size = await instance.getNumberOfArticles();
         const articles = await instance.getArticlesForSale();
-
         expect(size.toNumber(), 'number of articles').to.equal(0);
         expect(articles, 'articles for sale').to.have.length(0);
     });
