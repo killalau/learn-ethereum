@@ -77,7 +77,6 @@ App = {
         return instance.getArticlesForSale();
       })
       .then(function (articleIds) {
-        console.log(articleIds);
         if (!articleIds.length) {
           // no article
           $artList.text('No article yet.');
@@ -90,7 +89,6 @@ App = {
         return Promise.all(promises);
       })
       .then(function (articles) {
-        console.log(articles);
         for (var aid in articles) {
           // display info to UI
           var article = articles[aid];
@@ -190,7 +188,7 @@ App = {
               return;
             }
 
-            console.log('new article for sell:', event);
+            console.log('new event article for sell:', event);
             App.reloadArticles();
           });
 
@@ -201,7 +199,7 @@ App = {
               return;
             }
 
-            console.log('new article for bought:', event);
+            console.log('new event article bought:', event);
             App.reloadArticles();
           });
       });
@@ -212,14 +210,12 @@ App = {
     var $el = $(this);
     var data = $el.data();
 
-    console.log(data);
-
     App.contracts.ChainList.deployed()
       .then(function (instance) {
         return instance.buyArticle(data.id, { from: App.account, value: data.price, gas: 500000 });
       })
       .catch(function (err) {
-        console.log(err);
+        console.error(err);
       });
   },
 };
