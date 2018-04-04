@@ -1,6 +1,8 @@
 pragma solidity ^0.4.18;
 
-contract ChainList {
+import "./Ownable.sol";
+
+contract ChainList is Ownable {
     // custom types
     struct Article {
         uint id; // ID start from 1
@@ -30,6 +32,10 @@ contract ChainList {
         string _name,
         uint256 _price
     );
+
+    function kill() public onlyOwner {
+        selfdestruct(owner); // transfer the contract amont out
+    }
 
     function sellArticle(string _name, string _desc, uint256 _price) public {
         articleCounter++; // ID start from 1
