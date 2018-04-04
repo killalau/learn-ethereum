@@ -24,9 +24,20 @@ contract('ChainList', (accounts) => {
         expect(articles, 'articles for sale').to.have.length(0);
     });
 
-    it('should throw exception when you try to buy your own article', async () => {
+    it('should throw exception when you try to buy an article not exists', async () => {
         const instance = await ChainList.deployed();
         await instance.sellArticle(name, desc, web3.toWei(price), { from: seller });
+        const buy = instance.buyArticle(2, { from: seller, value: web3.toWei(price) });
+        await expect(buy).to.be.rejected;
+
+        const size = await instance.getNumberOfArticles();
+        const articles = await instance.getArticlesForSale();
+        expect(size.toNumber(), 'number of articles').to.equal(1);
+        expect(articles, 'articles for sale').to.have.length(1);
+    });
+
+    it('should throw exception when you try to buy your own article', async () => {
+        const instance = await ChainList.deployed();
         const buy = instance.buyArticle(1, { from: seller, value: web3.toWei(price) });
         await expect(buy).to.be.rejected;
 
