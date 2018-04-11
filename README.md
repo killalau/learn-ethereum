@@ -2,16 +2,20 @@
 
 ## Install Development tools
 ```bash
-# install nodejs
+# install nodejs (ubuntu)
+curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
 
 # install geth (OSX)
 brew tab ethereum/ethereum
 brew install ethereum
 
 # install geth (ubuntu)
+sudo apt-get install -y software-properties-common
 sudo add-apt-repository -y ppa:ethereum/ethereum
 sudo apt-get update
-sudo apt-get install ethereum
+sudo apt-get install -y ethereum
 
 # install ganache
 # http://truffleframework.com/ganache/
@@ -24,14 +28,14 @@ npm install -g truffle
 ```bash
 cd private
 
+# create account
+geth --datadir ./ account new
+
 # create genius block
 puppeth
 
 # init ethereum node
-geth --datadir ./ init LearnEthereum.json
-
-# create account
-geth --datadir ./ account new
+geth --datadir ./ init genesis.json
 
 # start node
 ./startnode-osx.sh
